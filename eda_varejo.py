@@ -8,7 +8,8 @@ Turma: Analise_de_Dados_T9
 
 Sprints:
   Sprint 1 (concluido): Importacao dos dados
-  Sprint 2 (atual): Transformacao de tipos (string, int, float, datetime)
+  Sprint 2 (concluido): Transformacao de tipos (string, int, float, datetime)
+  Sprint 3 (atual): Limpeza de nulos e duplicatas
 ================================================================================
 """
 
@@ -156,17 +157,109 @@ def aplicar_transformacoes_tipos(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # ===========================================================================
-# MAIN (Sprints 1 e 2)
+# SPRINT 3 - LIMPEZA DE NULOS E DUPLICATAS
+# ===========================================================================
+def tratar_nulos(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    SPRINT 3 - Limpeza de nulos.
+
+    Estrategia:
+    - Colunas criticas (DATA, PR_ID, CO_ID, CL_ID): remove linhas com nulos.
+    - PR_CAT e PR_NOME: preenche com 'DESCONHECIDO'.
+    - Atributos do cliente (CL_GENERO, CL_SEG, CL_EC, CL_FHL): imputa com
+      a moda do proprio cliente (CL_ID); se nao houver, usa a moda global.
+    """
+    print("\n[3a] Tratamento de valores nulos / ausentes:")
+
+    df = df.replace(r"^\s*$", np.nan, regex=True)
+    df = df.replace(["#N/D", "ND", "N/D", "nan", "NaN"], np.nan)
+
+    colunas_criticas = ["DATA", "PR_ID", "CO_ID", "CL_ID"]
+    colunas_existentes_criticas = [c for c in colunas_criticas if c in df.columns]
+
+    if colunas_existentes_criticas:
+        antes = len(df)
+        df = df.dropna(subset=colunas_existentes_criticas)
+        depois = len(df)
+        print(
+            f"  - Linhas removidas por nulos em colunas criticas "
+            f"({colunas_existentes_criticas}): {antes - depois}"
+        )
+
+    for col in ["PR_CAT", "PR_NOME"]:
+        if col in df.columns:
+            qtd_nan = int(df[col].isna().sum())
+            if qtd_nan > 0:
+                df[col] = df[col].fillna("DESCONHECIDO")
+                print(f"  - {col}: {qtd_nan} nulos imputados como 'DESCONHECIDO'.")
+
+    for col in ["CL_GENERO", "CL_SEG", "CL_EC", "CL_FHL"]:
+        if col in df.columns:
+            qtd_nan = int(df[col].isna().sum())
+            if qtd_nan > 0:
+                moda_por_cliente = df.groupby("CL_ID")[col].transform(
+                    lambda s: s.mode().iloc[0] if not s.mode().empty else np.nan
+                )
+                df[col] = df[col].fillna(moda_por_cliente)
+                moda_global = df[col].mode()
+                if not moda_global.empty:
+                    df[col] = df[col].fillna(moda_global.iloc[0])
+                print(
+                    f"  - {col}: {qtd_nan} nulos imputados (moda do cliente / moda global)."
+                )
+
+    return df
+
+
+def remover_duplicatas(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    SPRINT 3 - Remocao de duplicatas.
+
+    - Remove linhas duplicadas completas.
+    - Remove duplicatas por identificacao da transacao
+      (CO_ID, CL_ID, DATA, PR_ID), mantendo a primeira ocorrencia.
+    """
+    print("\n[3b] Remocao de duplicatas:")
+
+    antes = len(df)
+    df = df.drop_duplicates()
+    depois_todas = len(df)
+    print(f"  - Linhas duplicadas completas removidas: {antes - depois_todas}")
+
+    colunas_id = [c for c in ["CO_ID", "CL_ID", "DATA", "PR_ID"] if c in df.columns]
+    if colunas_id:
+        antes2 = len(df)
+        df = df.drop_duplicates(subset=colunas_id, keep="first")
+        print(
+            f"  - Linhas duplicadas por transacao ({colunas_id}) removidas: "
+            f"{antes2 - len(df)}"
+        )
+
+    print(f"  - Registros apos limpeza de duplicatas: {len(df)} (eram {antes})")
+    return df
+
+
+def aplicar_limpeza_nulos_duplicatas(df: pd.DataFrame) -> pd.DataFrame:
+    """SPRINT 3 - Orquestra a limpeza de nulos e duplicatas."""
+    separador("SPRINT 3 - LIMPEZA DE NULOS E DUPLICATAS")
+    df = tratar_nulos(df)
+    df = remover_duplicatas(df)
+    return df
+
+
+# ===========================================================================
+# MAIN (Sprints 1, 2 e 3)
 # ===========================================================================
 def main() -> None:
     print("Iniciando Analise Exploratoria de Dados - Base Varejo")
-    print("Sprints 1 e 2")
+    print("Sprints 1, 2 e 3")
 
     df = carregar_base(CAMINHO_CSV)
     mostrar_carga(df)
     df = aplicar_transformacoes_tipos(df)
+    df = aplicar_limpeza_nulos_duplicatas(df)
 
-    print("\nFim dos Sprints 1 e 2.")
+    print("\nFim dos Sprints 1, 2 e 3.")
 
 
 if __name__ == "__main__":
