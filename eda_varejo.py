@@ -279,7 +279,7 @@ def estatisticas_filhos(df: pd.DataFrame) -> None:
     print(f"\nColuna analisada: {col} (numero de filhos do cliente)")
     print(f"Contagem de registros validos: {serie.count()}")
     print(f"Media: {serie.mean():.2f}")
-    print(f"Mediana: {serie.mediana():.2f}")
+    print(f"Mediana: {serie.median():.2f}")
     print(f"Desvio padrao: {serie.std():.2f}")
     print(f"Moda: {serie.mode().iloc[0] if not serie.mode().empty else 'N/A'}")
     print(f"Minimo: {serie.min()}")
