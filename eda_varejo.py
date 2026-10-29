@@ -9,7 +9,8 @@ Turma: Analise_de_Dados_T9
 Sprints:
   Sprint 1 (concluido): Importacao dos dados
   Sprint 2 (concluido): Transformacao de tipos (string, int, float, datetime)
-  Sprint 3 (atual): Limpeza de nulos e duplicatas
+  Sprint 3 (concluido): Limpeza de nulos e duplicatas
+  Sprint 4 (atual): Estatistica descritiva (CL_FHL)
 ================================================================================
 """
 
@@ -248,18 +249,63 @@ def aplicar_limpeza_nulos_duplicatas(df: pd.DataFrame) -> pd.DataFrame:
 
 
 # ===========================================================================
-# MAIN (Sprints 1, 2 e 3)
+# SPRINT 4 - ESTATISTICA DESCRITIVA (NUMERO DE FILHOS)
+# ===========================================================================
+def estatisticas_filhos(df: pd.DataFrame) -> None:
+    """
+    SPRINT 4 - Estatistica descritiva.
+
+    Calcula e exibe para a coluna CL_FHL (numero de filhos do cliente):
+    - Contagem
+    - Media
+    - Mediana
+    - Desvio padrao
+    - Moda
+    - Minimo
+    - Maximo
+    - Quartis (25%, 50%, 75%)
+    - Distribuicao de frequencia
+    """
+    separador("SPRINT 4 - ESTATISTICA DESCRITIVA: NUMERO DE FILHOS (CL_FHL)")
+
+    col = "CL_FHL"
+    if col not in df.columns:
+        print(f"Coluna '{col}' nao encontrada na base.")
+        return
+
+    serie = df[col].dropna()
+
+    print(f"\nColuna analisada: {col} (numero de filhos do cliente)")
+    print(f"Contagem de registros validos: {serie.count()}")
+    print(f"Media: {serie.mean():.2f}")
+    print(f"Mediana: {serie.mediana():.2f}")
+    print(f"Desvio padrao: {serie.std():.2f}")
+    print(f"Moda: {serie.mode().iloc[0] if not serie.mode().empty else 'N/A'}")
+    print(f"Minimo: {serie.min()}")
+    print(f"Maximo: {serie.max()}")
+
+    print("\nQuartis (describe):")
+    print(serie.describe().to_string())
+
+    print("\nDistribuicao de frequencia por numero de filhos:")
+    print(serie.value_counts().sort_index().to_string())
+
+
+# ===========================================================================
+# MAIN (Sprints 1, 2, 3 e 4)
 # ===========================================================================
 def main() -> None:
     print("Iniciando Analise Exploratoria de Dados - Base Varejo")
-    print("Sprints 1, 2 e 3")
+    print("Sprints 1, 2, 3 e 4")
 
     df = carregar_base(CAMINHO_CSV)
     mostrar_carga(df)
     df = aplicar_transformacoes_tipos(df)
     df = aplicar_limpeza_nulos_duplicatas(df)
 
-    print("\nFim dos Sprints 1, 2 e 3.")
+    estatisticas_filhos(df)
+
+    print("\nFim dos Sprints 1, 2, 3 e 4.")
 
 
 if __name__ == "__main__":
